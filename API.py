@@ -1,21 +1,33 @@
 #pip install fastapi
 #pip install uvicorn
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+import json
 
 app = FastAPI()
 
-dati = {
-    'luoghi': [
-        'Milano',
-        'Roma',
-        'Riva del Garda',
-        'Sanremo',
-        'Taggia',
-        'Biot',
-        'Cerami']
-}
+#read data from file JSON
+with open("df_airfleets_clean.json", "r") as file:
+    dati = json.load(file)
 
+@app.get("/airlines", response_class=HTMLResponse)
+async def get_airlines():
+    try:
+        html_response = "<html><body><table>"
+        html_response += "<tr><th>AIRLINE</th><th>COUNTRY</th><th>INFORMATION</th></tr>"
+
+        for row in dati:
+            html_response += f"<tr><td>{row['AIRLINE']}</td><td>{row['COUNTRY']}</td><td>{row['INFORMATION']}</td></tr>"
+
+        html_response += "</table></body></html>"
+        
+        return HTMLResponse(content=html_response)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+'''
 @app.get("/luoghi")
 async def get_paesi():
     return {'dati': dati}
@@ -36,4 +48,4 @@ async def delete_paesi(paese: str):
     else:
         return {'data': dati, 'message': "La località non esiste"}
     
-    
+'''
