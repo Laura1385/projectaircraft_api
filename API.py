@@ -1,5 +1,7 @@
 #pip install fastapi
 #pip install uvicorn
+#uvicorn API:app --reload (modalità sviluppo)
+#uvicorn app:app  (modalità x distribuzione/normale)
 
 
 from fastapi import FastAPI
@@ -21,7 +23,7 @@ async def get_airfleets():
     for index, airline_data in dati['AIRLINE'].items():
         airline_name = airline_data
         country = dati['COUNTRY'][index]
-        information = dati['INFORMATION'][index]
+        information = dati['INFORMATION/N.AIRCRAFT'][index]
         row_string = f"{airline_name}, {country}, {information}"
         result.append(row_string)
 
@@ -42,8 +44,8 @@ async def get_airline_info(airline_name: str):
         for index, existing_airline in dati['AIRLINE'].items():
             if existing_airline.replace(" ", "").lower() == airline_name:
                 country = dati['COUNTRY'][index]
-                information = dati['INFORMATION'][index]
-                return {'AIRLINE': existing_airline, 'COUNTRY': country, 'INFORMATION': information}
+                information = dati['INFORMATION/N.AIRCRAFT'][index]
+                return {'AIRLINE': existing_airline, 'COUNTRY': country, 'INFORMATION/N.AIRCRAFT': information}
 
         #if the airline doesn't exist return a error message
         return {'error': f"Airline '{airline_name}' not found"}
@@ -53,47 +55,68 @@ async def get_airline_info(airline_name: str):
 
 #3 - 
 
-def contains_category(text, category):
-    # Rimuovi gli spazi all'inizio e alla fine del testo e convertilo in minuscolo
-    cleaned_text = text.strip().lower()
-    
-    # Controlla se il testo contiene la categoria specificata
-    return category in cleaned_text
+from pydantic import BaseModel
+from typing import List
 
-@app.get("/airline_categories")
-async def get_airline_categories(country: str):
+@app.get("/get_airline_categories", response_model=AirlineCategories)
+def get_airline_categories(country: str):
     try:
-        # Converte il paese inserito dall'utente in minuscolo
-        country = country.lower()
-
         # Inizializza i contatori per le tre categorie
         aircraft_count = 0
         inactive_with_aircraft_count = 0
         inactive_merged_count = 0
 
-        # Scorre i dati e conta le compagnie aeree nelle tre categorie
-        for index in dati['AIRLINE']:
-            airline_info = dati['INFORMATION'][index].lower()
-            if dati['COUNTRY'][index].lower() == country:
-                if contains_category(airline_info, "aircraft"):
+        # Ciclo for per cercare il paese
+        for index, row in dati['AIRLINE'].iterrows():
+            if row['COUNTRY'].lower() == country.lower():  # Confronto ignorando maiuscole/minuscole
+                information = row['INFORMATION/N.AIRCRAFT']
+
+                if information.isdigit():  # Controlla se è un numero (compagnia attiva)
                     aircraft_count += 1
-                if contains_category(airline_info, "inactive (with supported aircraft)"):
+                elif information == 'inactive (with supported aircraft)':  # Compagnia scomparsa
                     inactive_with_aircraft_count += 1
-                if contains_category(airline_info, "inactive (with supported aircraft)renamed / merged"):
+                elif information.startswith('inactive (with supported aircraft)Renamed / Merged to'):  # Compagnia assorbita
                     inactive_merged_count += 1
 
-        return {
-            'country': country,
-            'aircraft_count': aircraft_count,
-            'inactive_with_aircraft_count': inactive_with_aircraft_count,
-            'inactive_merged_count': inactive_merged_count
-        }
+        # Verifica se il paese è stato trovato
+        if aircraft_count + inactive_with_aircraft_count + inactive_merged_count > 0:
+            return AirlineCategories(country=country,
+                                     aircraft_count=aircraft_count,
+                                     inactive_with_aircraft_count=inactive_with_aircraft_count,
+                                     inactive_merged_count=inactive_merged_count)
+        else:
+            return {"message": "Nessuna compagnia aerea trovata per questo paese."}
     except Exception as e:
         return {'error': str(e)}
+    
 
-
-
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 
