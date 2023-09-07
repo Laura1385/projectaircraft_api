@@ -11,31 +11,58 @@
 import json
 from fastapi import FastAPI
 from fastapi import FastAPI, HTTPException
+from starlette.responses import FileResponse
 
 app = FastAPI()
 
+#0____ http://127.0.0.1:8000/show_map
+@app.get("/show_map")
+async def show_map():
+    # Specifica il nome del tuo file HTML nella stessa directory dell'applicazione
+    html_file_name = "world_map.html"
+    
+    # Restituisci il file HTML come risposta
+    return FileResponse(html_file_name, media_type="text/html")
+
+
 #read data from file JSON 
 with open("df_airfleets_clean.json", "r") as file:
-    dati = json.load(file)
+    data = json.load(file)
 
-#1____ - http://127.0.0.1:8000/airlines_db
+#1____ http://127.0.0.1:8000/airlines_db
 @app.get("/airlines_db")
 async def get_airlines_db():
-    #initialise a list to store data rows side by side
+    # Initialize a set to store unique countries and airlines
+    unique_countries = set()
+    unique_airlines = set()
+
+    # Initialize a list to store data rows side by side
     result = []
 
-    #iterate over the data and create a string for each row
-    for index, airline_data in dati['AIRLINE'].items():
+    # Iterate over the data and create a string for each row
+    for index, airline_data in data['AIRLINE'].items():
         airline_name = airline_data
-        country = dati['COUNTRY'][index]
-        information = dati['INFORMATION/N.AIRCRAFT'][index]
+        country = data['COUNTRY'][index]
+        information = data['INFORMATION/N.AIRCRAFT'][index]
         row_string = f"{airline_name}, {country}, {information}"
         result.append(row_string)
 
-    #Join strings using semicolons as separators
-    result_string = "; ".join(result)
-    return {"Airlines Data Base": result_string}
+        # Add the country and airline to the set to count unique values
+        unique_countries.add(country)
+        unique_airlines.add(airline_name)
 
+    # Join strings using semicolons as separators
+    result_string = "; ".join(result)
+
+    # Get the count of unique countries and airlines
+    num_unique_countries = len(unique_countries)
+    num_unique_airlines = len(unique_airlines)
+
+    return {
+        "Number of Countries with Airlines": num_unique_countries,
+        "Number of Airlines in Db": num_unique_airlines,
+        "Airlines Data Base": result_string
+    }
 
 
 
@@ -47,10 +74,10 @@ async def get_airline_info(airline_name: str):
         airline_name = airline_name.replace(" ", "").lower()
 
         #search for the airline (also converting existing names to lowercase and removing spaces)
-        for index, existing_airline in dati['AIRLINE'].items():
+        for index, existing_airline in data['AIRLINE'].items():
             if existing_airline.replace(" ", "").lower() == airline_name:
-                country = dati['COUNTRY'][index]
-                information = dati['INFORMATION/N.AIRCRAFT'][index]
+                country = data['COUNTRY'][index]
+                information = data['INFORMATION/N.AIRCRAFT'][index]
                 return {'AIRLINE': existing_airline, 'COUNTRY': country, 'INFORMATION/N.AIRCRAFT': information}
 
         #if the airline doesn't exist return a error message
@@ -69,27 +96,30 @@ async def get_airlines_info_by_country(country_name: str):
         country_name = country_name.capitalize()
 
         #initialize a list to store airlines and their related data
-        compagnie_aeree = []
+        airlines = []
         num = 0
 
         #loop to search for the country
-        for key, row in dati['COUNTRY'].items():
+        for key, row in data['COUNTRY'].items():
             if row.lower() == country_name.lower():
-                airline_name = dati['AIRLINE'][key]
-                information = dati['INFORMATION/N.AIRCRAFT'][key]
-                compagnia_aerea = f"{airline_name}, {row}, {information}"
-                compagnie_aeree.append(compagnia_aerea)
+                airline_name = data['AIRLINE'][key]
+                information = data['INFORMATION/N.AIRCRAFT'][key]
+                airline = f"{airline_name}, {row}, {information}"
+                airlines.append(airline)
         
         #calculate the number of found airlines
-        num = len(compagnie_aeree)
+        num = len(airlines)
 
         #check if the country has been found
-        if compagnie_aeree:
+        if airlines:
             #concatenate the airlines into a string separated by semicolons
-            result_string = "; ".join(compagnie_aeree)
+            result_string = "; ".join(airlines)
             return {"Airline find": num, "Airline Details": result_string}
         else:
             raise HTTPException(status_code=404, detail=f"Nessuna compagnia aerea trovata per il paese {country_name}")
 
     except KeyError as e:
         raise HTTPException(status_code=500, detail=f"Missing field: {e}")
+        
+       
+           
