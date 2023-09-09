@@ -79,7 +79,7 @@ async def get_airline_info(airline_name: str):
                 country = data['COUNTRY'][index]
                 information = data['INFORMATION/N.AIRCRAFT'][index]
                 return {'AIRLINE': existing_airline, 'COUNTRY': country, 'INFORMATION/N.AIRCRAFT': information}
-
+            
         #if the airline doesn't exist return a error message
         return {'error': f"Airline '{airline_name}' not found"}
     except KeyError as e:
@@ -104,7 +104,8 @@ async def get_airlines_info_by_country(country_name: str):
             if row.lower() == country_name.lower():
                 airline_name = data['AIRLINE'][key]
                 information = data['INFORMATION/N.AIRCRAFT'][key]
-                airline = f"{airline_name}, {row}, {information}"
+                #airline = f"{airline_name}, {row}, {information}"
+                airline = {'Airline name':airline_name, 'Country' : row, 'info': information}
                 airlines.append(airline)
         
         #calculate the number of found airlines
@@ -113,8 +114,8 @@ async def get_airlines_info_by_country(country_name: str):
         #check if the country has been found
         if airlines:
             #concatenate the airlines into a string separated by semicolons
-            result_string = "; ".join(airlines)
-            return {"Airline find": num, "Airline Details": result_string}
+            #result_string = "; ".join(airlines)
+            return {"Total": num, "Details": airlines}
         else:
             raise HTTPException(status_code=404, detail=f"Nessuna compagnia aerea trovata per il paese {country_name}")
 
@@ -122,4 +123,38 @@ async def get_airlines_info_by_country(country_name: str):
         raise HTTPException(status_code=500, detail=f"Missing field: {e}")
         
        
-           
+    
+    
+#test    
+@app.get("/test/{country_name}")
+async def get_airlines_info_by_country(country_name: str):
+    try:
+        #transform country name into uppercase
+        country_name = country_name.capitalize()
+
+        #initialize a list to store airlines and their related data
+        airlines = []
+        num = 0
+
+        #loop to search for the country
+        for key, row in data['COUNTRY'].items():
+            if row.lower() == country_name.lower():
+                airline_name = data['AIRLINE'][key]
+                information = data['INFORMATION/N.AIRCRAFT'][key]
+                #airline = f"{airline_name}, {row}, {information}"
+                airline = {'Airline name':airline_name, 'Country' : row, 'info': information}
+                airlines.append(airline)
+        
+        #calculate the number of found airlines
+        num = len(airlines)
+
+        #check if the country has been found
+        if airlines:
+            #concatenate the airlines into a string separated by semicolons
+            #result_string = "; ".join(airlines)
+            return {"Total": num, "Details": airlines}
+        else:
+            raise HTTPException(status_code=404, detail=f"Nessuna compagnia aerea trovata per il paese {country_name}")
+
+    except KeyError as e:
+        raise HTTPException(status_code=500, detail=f"Missing field: {e}")
