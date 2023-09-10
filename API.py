@@ -117,44 +117,50 @@ async def get_airlines_info_by_country(country_name: str):
             #result_string = "; ".join(airlines)
             return {"Total": num, "Details": airlines}
         else:
-            raise HTTPException(status_code=404, detail=f"Nessuna compagnia aerea trovata per il paese {country_name}")
+            raise HTTPException(status_code=404, detail=f"No airlines found for the country {country_name}")
 
     except KeyError as e:
         raise HTTPException(status_code=500, detail=f"Missing field: {e}")
         
        
     
-    
-#test    
-@app.get("/test/{country_name}")
-async def get_airlines_info_by_country(country_name: str):
+#4____ http://127.0.0.1:8000/airlines_summary_by_country/italy
+@app.get("/airlines_summary_by_country/{country_name}")
+async def get_airlines_summary_by_country(country_name: str):
     try:
         #transform country name into uppercase
         country_name = country_name.capitalize()
+        
+        trovato = False  # Flag per verificare se il paese è stato trovato
 
         #initialize a list to store airlines and their related data
-        airlines = []
-        num = 0
+        active_count = 0
+        disappeared_count = 0
+        absorbed_count = 0
 
-        #loop to search for the country
+        #ciclo for per cercare il paese
         for key, row in data['COUNTRY'].items():
-            if row.lower() == country_name.lower():
-                airline_name = data['AIRLINE'][key]
+            if row.lower() == country_name.lower(): 
+                trovato = True
                 information = data['INFORMATION/N.AIRCRAFT'][key]
-                #airline = f"{airline_name}, {row}, {information}"
-                airline = {'Airline name':airline_name, 'Country' : row, 'info': information}
-                airlines.append(airline)
-        
-        #calculate the number of found airlines
-        num = len(airlines)
 
-        #check if the country has been found
-        if airlines:
-            #concatenate the airlines into a string separated by semicolons
-            #result_string = "; ".join(airlines)
-            return {"Total": num, "Details": airlines}
+                if information.isdigit():  #controllo se è un numero (compagnia attiva)
+                    active_count += 1
+                elif information == 'inactive (with supported aircraft)':  #compagnia scomparsa
+                    disappeared_count += 1
+                elif information.startswith('inactive (with supported aircraft)Renamed / Merged to'):  #compagnia assorbita
+                    absorbed_count += 1
+
+        #verifica se il paese è stato trovato
+        if trovato:
+            return{
+                'Found for': country_name,
+                'Number of active airlines': active_count,
+                'Number of failed airlines': disappeared_count,
+                'Number of airlines absorbed': absorbed_count
+            }
         else:
-            raise HTTPException(status_code=404, detail=f"Nessuna compagnia aerea trovata per il paese {country_name}")
+            raise HTTPException(status_code=404, detail=f"No airlines found for the country {country_name}")
 
     except KeyError as e:
         raise HTTPException(status_code=500, detail=f"Missing field: {e}")
