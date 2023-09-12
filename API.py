@@ -1,11 +1,15 @@
 #pip install fastapi
 #pip install uvicorn
 
-#uvicorn API:app --reload (modalità sviluppo)
-#uvicorn app:app  (modalità x distribuzione/normale)
-
+#In terminale
+#uvicorn api:app --reload (modalità sviluppo)
+#uvicorn api:app  (modalità x distribuzione/normale)
+#CTRL+C per uscire/interrompere
 #http://127.0.0.1:8000/redoc
 #http://127.0.0.1:8000/docs#/
+
+#In terminale con container 
+
 
 
 import json
