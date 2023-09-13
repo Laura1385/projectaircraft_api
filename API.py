@@ -4,12 +4,17 @@
 #In terminale
 #uvicorn api:app --reload (modalità sviluppo)
 #uvicorn api:app  (modalità x distribuzione/normale)
-#CTRL+C per uscire/interrompere
-#http://127.0.0.1:8000/redoc
-#http://127.0.0.1:8000/docs#/
+#CTRL+C (per uscire/interrompere)
+#http://127.0.0.1:8000/redoc (documentazione)
+#http://127.0.0.1:8000/docs#/ (documentazione)
 
 #In terminale con container 
-
+#docker build -t api_airlines .  (crea immagine)
+#docker run -p 8000:8000 -d api_airlines   (lancia)
+#docker ps (mostra container attivi)
+#docker --version
+#netstat -tuln (mostra porte in ascolto)
+#http://localhost:8080/airlines_db
 
 
 import json
@@ -88,7 +93,6 @@ async def get_airline_info(airline_name: str):
         return {'error': f"Airline '{airline_name}' not found"}
     except KeyError as e:
         return {'error': f"Missing field: {e}"}
-    
     
     
     
