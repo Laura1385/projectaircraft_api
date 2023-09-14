@@ -21,10 +21,17 @@ import json
 from fastapi import FastAPI
 from fastapi import FastAPI, HTTPException
 from starlette.responses import FileResponse
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+#for documented error 404 e 500
+class Message(BaseModel):
+    message: str
+
 
 app = FastAPI()
 
-#0____ http://127.0.0.1:8000/show_map
+#1____ http://127.0.0.1:8000/show_map
 @app.get("/show_map")
 async def show_map():
     # Specifica il nome del tuo file HTML nella stessa directory dell'applicazione
@@ -38,7 +45,7 @@ async def show_map():
 with open("df_airfleets_clean.json", "r") as file:
     data = json.load(file)
 
-#1____ http://127.0.0.1:8000/airlines_db
+#2____ http://127.0.0.1:8000/airlines_db
 @app.get("/airlines_db")
 async def get_airlines_db():
     # Initialize a set to store unique countries and airlines
@@ -74,9 +81,8 @@ async def get_airlines_db():
     }
 
 
-
-#2____ http://127.0.0.1:8000/airline_info/Airfrance
-@app.get("/airline_info/{airline_name}")
+#3____ http://127.0.0.1:8000/airline_info/Airfrance
+@app.get("/airline_info/{airline_name}", responses={404: {"model": Message}, 500: {"model": Message}})
 async def get_airline_info(airline_name: str):
     try:
         #removes spaces from the airline name
@@ -87,17 +93,20 @@ async def get_airline_info(airline_name: str):
             if existing_airline.replace(" ", "").lower() == airline_name:
                 country = data['COUNTRY'][index]
                 information = data['INFORMATION/N.AIRCRAFT'][index]
+                if information.strip() == "":
+                    return JSONResponse(status_code=404, content={"404 - Warning!": f"Airline '{airline_name}'name is empty"})
+                
                 return {'AIRLINE': existing_airline, 'COUNTRY': country, 'INFORMATION/N.AIRCRAFT': information}
             
-        #if the airline doesn't exist return a error message
-        return {'error': f"Airline '{airline_name}' not found"}
+        return JSONResponse(status_code=404, content={"404 - Warning!": f"Airline '{airline_name}' not found"})
+    
     except KeyError as e:
-        return {'error': f"Missing field: {e}"}
+        raise HTTPException(status_code=500, detail=f"500 - Missing field: {e}")
     
     
     
-#3____ http://127.0.0.1:8000/get_airlines_by_country/Italy   
-@app.get("/airlines_info_by_country/{country_name}")
+#4____ http://127.0.0.1:8000/get_airlines_by_country/Italy   
+@app.get("/airlines_info_by_country/{country_name}", responses={404: {"model": Message}, 500: {"model": Message}})
 async def get_airlines_info_by_country(country_name: str):
     try:
         #transform country name into uppercase
@@ -125,15 +134,15 @@ async def get_airlines_info_by_country(country_name: str):
             #result_string = "; ".join(airlines)
             return {"Total": num, "Details": airlines}
         else:
-            raise HTTPException(status_code=404, detail=f"No airlines found for the country {country_name}")
+            raise HTTPException(status_code=404, detail=f"404 - Warning! No airlines found for the country {country_name}")
 
     except KeyError as e:
-        raise HTTPException(status_code=500, detail=f"Missing field: {e}")
+        raise HTTPException(status_code=500, detail=f"500 - Missing field: {e}")
         
        
     
-#4____ http://127.0.0.1:8000/airlines_summary_by_country/italy
-@app.get("/airlines_summary_by_country/{country_name}")
+#5____ http://127.0.0.1:8000/airlines_summary_by_country/italy
+@app.get("/airlines_summary_by_country/{country_name}",responses={404: {"model": Message}, 500: {"model": Message}})
 async def get_airlines_summary_by_country(country_name: str):
     try:
         #transform country name into uppercase
@@ -168,7 +177,8 @@ async def get_airlines_summary_by_country(country_name: str):
                 'Number of airlines absorbed': absorbed_count
             }
         else:
-            raise HTTPException(status_code=404, detail=f"No airlines found for the country {country_name}")
+            raise HTTPException(status_code=404, detail=f"404 - Warning! No airlines found for the country {country_name}")
 
     except KeyError as e:
-        raise HTTPException(status_code=500, detail=f"Missing field: {e}")
+        raise HTTPException(status_code=500, detail=f"500 - Missing field: {e}")
+        
