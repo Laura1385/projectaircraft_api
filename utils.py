@@ -12,13 +12,14 @@ warnings.filterwarnings('ignore')
 
 
 
-#LlistAlphabet lowercase and uppercase
+#listAlphabet lowercase and uppercase
 def listAlphabet(lowercase=True):
     start = ord('a') if lowercase else ord('A')
     end = ord('z') if lowercase else ord('Z')
     return [chr(i) for i in range(start, end + 1)]
 
-#Create random headers
+
+#create random headers
 def gen_random_headers():
     list_headers = [
         {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'},
@@ -28,7 +29,8 @@ def gen_random_headers():
     headers = random.choice(list_headers)
     return headers
 
-#Get number's page from website
+
+#get number's page from website
 def get_num_pages(url):
     ua = UserAgent()
     data = requests.get(url, headers = {'User-Agent':'{}'.format(ua.random)})
@@ -47,6 +49,35 @@ def get_num_pages(url):
     page = soup.find("a", {"class": "page2"})
     print(page)
     return page.text
+
+
+#clean column for merge
+def clean_column(df, column):
+    #removes spaces before and after the value
+    df[column] = df[column].str.strip()
+    
+    #converts to lower case
+    df[column] = df[column].str.lower()
+    
+    #removes punctuation
+    df[column] = df[column].str.replace(r'[^\w\s]', '', regex=True).str.replace(r'\s+', '', regex=True)
+    
+    #normalises values by removing accents
+    df[column] = df[column].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
+
+
+def process_column(df, column_names):
+    #find and show duplicates
+    dup_df = df[df.duplicated(subset=column_names)]
+    print("Duplicates found:", len(dup_df))
+    print(dup_df)
+
+    #remove duplicates
+    no_dup_df = df.drop_duplicates(subset=column_names)
+    return no_dup_df
+
+
+
 
 
 
