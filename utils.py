@@ -12,6 +12,18 @@ warnings.filterwarnings('ignore')
 
 
 
+#count data dowloaded
+def count(df):
+    df_num_s = len(df)
+    print(f"- Airlines total: {df_num_s}")      
+
+    df_sky_unique = len(df.drop_duplicates())
+    print(f"- Unique rows: {df_sky_unique}")
+
+    sky_nrows_double = len(df) - len(df.drop_duplicates())
+    print(f"- Duplicate rows: {sky_nrows_double}")
+
+
 #listAlphabet lowercase and uppercase
 def listAlphabet(lowercase=True):
     start = ord('a') if lowercase else ord('A')
