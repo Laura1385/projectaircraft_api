@@ -13,4 +13,4 @@ Questo progetto esplora il mondo delle API utilizzando dati relativi agli aeromo
 Si consiglia l'utilizzo di Python 3.9.17 per garantire la compatibilità e risolvere eventuali problemi di scraping.
 
 # Docker Hub Repository
-Il Dockerfile e l'immagine Docker di questo progetto sono disponibili nel repository pubblico su Docker Hub: https://hub.docker.com/r/laura1385/projectairlines_api!
+Il Dockerfile e l'immagine Docker di questo progetto sono disponibili nel repository pubblico su Docker Hub: https://hub.docker.com/r/laura1385/projectairlines_api
