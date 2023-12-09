@@ -14,3 +14,14 @@ Si consiglia l'utilizzo di Python 3.9.17 per garantire la compatibilità e risol
 
 # Docker Hub Repository
 Il Dockerfile e l'immagine Docker di questo progetto sono disponibili nel repository pubblico su Docker Hub: https://hub.docker.com/r/laura1385/projectairlines_api
+
+
+
+
+NOTE:
+
+Libraries --> requirements.txt
+
+Functions --> utils.py
+
+Project's code --> main.ipynb
