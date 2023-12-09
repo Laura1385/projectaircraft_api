@@ -25,3 +25,5 @@ Libraries --> requirements.txt
 Functions --> utils.py
 
 Project's code --> main.ipynb
+
+Project presentation --> PPT_Projectaircraft_api.pdf
